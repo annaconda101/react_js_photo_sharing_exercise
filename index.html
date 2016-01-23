@@ -1,0 +1,176 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Adventures</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.6/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+    <style>
+     .photoBox img { width : 50%; }; 
+    </style>
+  </head>
+  <body>
+    <div id="main"></div>
+    <script type="text/babel">
+      var MainBox = React.createClass({
+        render: function() {
+          return (
+            <div className="mainBox">
+              <PhotoBox photos={this.props.photos}/>
+            </div>
+          );
+        }
+      });
+      var PhotoBox = React.createClass({
+        render: function() {
+          return (
+            <div className="photoBox">
+              <h1>Photos</h1>
+              <PhotoList photos={this.props.photos} />
+              <CommentsBox comments={this.props.comments} pollInterval={20000}/>
+            </div>
+          );
+        }
+      });
+
+      var PhotoList = React.createClass({
+	render: function() {
+          var photoNodes = this.props.photos.map(function(photo) {
+            return (
+	      <Photo key={photo.id} title={photo.title} photo_by={photo.photo_by} url={photo.url}>
+	      </Photo>
+            );
+          });
+	  return (
+            <div className="photoList">
+              {photoNodes}
+            </div>
+          );
+        }
+      });
+
+      var Photo = React.createClass({
+	  render: function() {
+            return (
+	      <div className="photo">
+		<img src={ this.props.url }></img>
+                <h3>{ this.props.title }</h3>
+                <p>{ this.props.photo_by }</p>
+             </div>
+          );
+         }
+      });
+      
+      var CommentsBox = React.createClass({
+        loadCommentsFromServer: function(comments) {
+          console.log('loadCommentsFromServer');  
+          //return this.setState({ comments: comments });
+        },
+        handleCommentSubmit: function() {
+          console.log('handleCommentSubmit');
+        },
+  	getInitialState: function() {
+    	  return {comments: []};
+        },
+        componentDidMount: function() {
+          this.loadCommentsFromServer();
+          setInterval(this.loadCommentsFromServer, this.props.pollInterval);
+        },
+        render: function() {
+          return (
+            <div className="commentsBox">
+              <h3>Comments:</h3>
+              <CommentsList comments={this.state.comments} />
+              <CommentForm onCommentSubmit={this.handleCommentSubmit} />
+            </div>
+          );
+        }
+      });
+
+      var CommentsList = React.createClass({
+        render: function() {
+          var commentNodes = this.props.comments.map(function(comment) {
+            return (
+              <Comment author={comment.author} key={comment.id}>
+                {comment.text}
+              </Comment>
+            );
+          });
+          return (
+            <div className="commentList">
+              {commentNodes}
+            </div>
+          );
+        }
+      });
+
+      var Comment = React.createClass({
+        render: function() {
+          return (
+            <div className="comment">
+              <h2>{ this.props.author }</h2>
+              <p>Comment: { this.props.children }</p>
+            </div>
+          );
+         }
+      });
+
+      var CommentForm = React.createClass({
+        getInitialState: function() {
+          return {author: '', text: ''};
+        },
+        handleAuthorChange: function(e) {
+          this.setState({author: e.target.value});
+        },
+        handleTextChange: function(e) {
+          this.setState({text: e.target.value});
+        },
+
+        handleSubmit: function(e) {
+          e.preventDefault();
+          var author = this.state.author.trim();
+          var text = this.state.text.trim();
+            if (!text || !author) {
+              return;
+            }
+          // TODO: send request to the server
+          this.props.onCommentSubmit({author: author, text: text});
+          this.setState({author: '', text: ''});
+        },
+        render: function() {
+          return (
+            <form className="commentForm" onSubmit={this.handleSubmit}>
+              <input
+                type="text"
+                placeholder="Your name"
+                value={this.state.author}
+                onChange={this.handleAuthorChange}
+              />
+              <input
+                type="text"
+                placeholder="Say something..."
+                value={this.state.text}
+                onChange={this.handleTextChange}
+              />
+              <input type="submit" value="Post" />
+            </form>
+          );
+        }
+      });
+
+
+
+      var comments = [{id: 1, author: "Anna Villanueva", text: "Taken at Manly"}, {id: 2, author: "Felo Nueva", text: "Another beautiful day"}];
+      var photos = [{id: 1, title: 'Padlock', photo_by: 'A Mikulasev', url: 'https://scontent-syd1-1.xx.fbcdn.net/hphotos-xtf1/v/t1.0-9/12002923_10155843871350538_3373127797501123281_n.jpg?oh=7be64cbe0330d810fe5ecb23e3d0b663&oe=5741125E'}, {id:2, title: 'Sculpture', photo_by: 'Adam Mikulasev', url: 'https://scontent-syd1-1.xx.fbcdn.net/hphotos-xft1/v/t1.0-9/11011113_10155843871140538_8761509791250846348_n.jpg?oh=39e002444a14bd997bf6f3da6bdc7da5&oe=57470317'}];
+
+ReactDOM.render( <MainBox comments={comments} photos={photos}/>,
+        document.getElementById('main')
+      );
+    </script>
+  
+  </body>
+</html>
